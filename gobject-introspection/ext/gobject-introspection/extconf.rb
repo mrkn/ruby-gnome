@@ -48,6 +48,31 @@ require "mkmf-gnome2"
                      :target_build_dir => build_dir)
 end
 
+llvm_config = with_config("llvm-config", "llvm-config")
+unless find_executable0(llvm_config)
+  $stderr.puts "Unable to find llvm-config"
+  abort
+end
+
+open("|'#{llvm_config}' --version --includedir --libdir --cxxflags --ldflags --libs") do |io|
+  LLVM_VERSION = io.gets.chomp
+
+  LLVM_INCLUDEDIR = io.gets.chomp
+  $INCFLAGS << " -I#{LLVM_INCLUDEDIR}"
+
+  LLVM_LIBDIR = io.gets.chomp
+  $LIBPATH << LLVM_LIBDIR
+
+  LLVM_CXXFLAGS = io.gets.chomp
+  $CXXFLAGS << " " << LLVM_CXXFLAGS
+
+  LLVM_LDFLAGS = io.gets.chomp
+  $LDFLAGS << " " << LLVM_LDFLAGS
+
+  LLVM_LIBS = io.gets.chomp
+  $libs << " " << LLVM_LIBS
+end
+
 unless required_pkg_config_package(package_id,
                                    :alt_linux => "gobject-introspection-devel",
                                    :debian => "libgirepository1.0-dev",
